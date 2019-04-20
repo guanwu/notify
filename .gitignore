@@ -3,3 +3,24 @@
 ################################################################################
 
 /.vs
+/packages
+/src/Bin
+/src/Container/NotifyConsoleApp/obj
+/src/Persistence/Persistence.Models/bin/Debug
+/src/Persistence/Persistence.Models/obj
+/src/Persistence/Persistence.Models.Mapper/obj
+/src/Pipeline/Pipeline.AddInSideAdapters/obj
+/src/Pipeline/Pipeline.Contracts/bin/Release
+/src/Pipeline/Pipeline.Contracts/obj
+/src/Pipeline/Pipeline.HostSideAdapters/obj
+/src/Pipeline/Pipeline.ShareViews/obj
+/src/Pipeline/PipelineBuilder/obj
+/src/Pipeline/Scripts/Output
+/src/Plugins/Plugin.Persistence.Console/obj
+/src/Plugins/Plugin.Persistence.Database/obj
+/src/Plugins/Plugin.Transformer.Xml/obj
+/src/Widgets/Bin
+/src/Widgets/Widget.Contracts/obj
+/src/Widgets/Widget.DbContext.SqlServer/obj
+/src/Widgets/Widget.FileSystemMessenger/obj
+/src/Widgets/Widget.FileSystemProfile/obj

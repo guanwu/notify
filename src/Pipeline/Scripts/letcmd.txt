@@ -1,0 +1,1 @@
+PipelineBuilderProgram "C:\Users\Wei\Source\Repos\Guanwu\Guanwu.Notify\Pipeline\Bin\PipelineBuilder.dll" C:\Users\Wei\Source\Repos\Guanwu\Guanwu.Notify\Pipeline\Lib\Output
