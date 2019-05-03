@@ -47,12 +47,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Internal\Const.cs" />
-    <Compile Include="Mappings\MessageAttributeMap.cs" />
-    <Compile Include="Mappings\MessageMap.cs" />
-    <Compile Include="Mappings\ScheduledTaskMap.cs" />
-    <Compile Include="Mappings\ServiceRequestMap.cs" />
-    <Compile Include="Mappings\ServiceResponseMap.cs" />
-    <Compile Include="Mappings\SystemExceptionMap.cs" />
+    <Compile Include="Mappings\JobParamMap.cs" />
+    <Compile Include="Mappings\JobMap.cs" />
+    <Compile Include="Mappings\JobTaskMap.cs" />
+    <Compile Include="Mappings\TaskStateMap.cs" />
+    <Compile Include="Mappings\TaskRequestMap.cs" />
+    <Compile Include="Mappings\TaskResponseMap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

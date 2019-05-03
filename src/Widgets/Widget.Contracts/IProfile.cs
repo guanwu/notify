@@ -1,8 +1,10 @@
-﻿namespace Guanwu.Notify.Widget
+﻿using System.Collections.Generic;
+
+namespace Guanwu.Notify.Widget
 {
-    public interface IProfile : ICrossDomainWidget
+    public interface IProfile : IWidget
     {
         void Refresh();
-        dynamic Get(string name, string key = "");
+        IEnumerable<object> LoadProfile(string profileKey, string pluginName, params string[] scopes);
     }
 }

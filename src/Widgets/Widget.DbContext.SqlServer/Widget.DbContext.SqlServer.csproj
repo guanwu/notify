@@ -53,11 +53,6 @@
     <Compile Include="Internal\Const.cs" />
     <Compile Include="Internal\SqlServerDbConfiguration.cs" />
     <Compile Include="Internal\SqlServerDbContext.cs" />
-    <Compile Include="Migrations\201904170748382_baseline.cs" />
-    <Compile Include="Migrations\201904170748382_baseline.Designer.cs">
-      <DependentUpon>201904170748382_baseline.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Public\DbContextProxy.cs" />
   </ItemGroup>
@@ -66,15 +61,14 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Widget.Contracts.Persistence\Widget.Contracts.Persistence.csproj">
+      <Project>{DB466E0C-825A-430E-BB64-0D2A28F3EC6C}</Project>
+      <Name>Widget.Contracts.Persistence</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Widget.Contracts\Widget.Contracts.csproj">
       <Project>{a281ed88-01f5-46a8-a265-b9153962fa7a}</Project>
       <Name>Widget.Contracts</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Migrations\201904170748382_baseline.resx">
-      <DependentUpon>201904170748382_baseline.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

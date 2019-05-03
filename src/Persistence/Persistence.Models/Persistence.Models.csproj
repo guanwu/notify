@@ -41,14 +41,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Entities\Message.cs" />
-    <Compile Include="Entities\MessageAttribute.cs" />
-    <Compile Include="Entities\ScheduledTask.cs" />
-    <Compile Include="Entities\ServiceRequest.cs" />
-    <Compile Include="Entities\ServiceResponse.cs" />
-    <Compile Include="Entities\SystemException.cs" />
-    <Compile Include="Enums\TaskStatus.cs" />
-    <Compile Include="Extensions\MessageAttributeExtension.cs" />
+    <Compile Include="Entities\Job.cs" />
+    <Compile Include="Entities\JobParam.cs" />
+    <Compile Include="Entities\JobTask.cs" />
+    <Compile Include="Entities\TaskRequest.cs" />
+    <Compile Include="Entities\TaskResponse.cs" />
+    <Compile Include="Entities\TaskState.cs" />
+    <Compile Include="Enums\TaskStates.cs" />
+    <Compile Include="Extensions\JobExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

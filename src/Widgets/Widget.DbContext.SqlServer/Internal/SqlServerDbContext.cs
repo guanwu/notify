@@ -5,16 +5,17 @@ namespace Guanwu.Notify.Widget.DbContext.SqlServer
     [DbConfigurationType(typeof(SqlServerDbConfiguration))]
     internal class SqlServerDbContext : System.Data.Entity.DbContext
     {
-        public SqlServerDbContext() : base("name=MigrationConnect") { }
-
         public SqlServerDbContext(string connectionString)
-            : base(connectionString) { }
+            : base(connectionString) {
+
+        }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-            modelBuilder.HasDefaultSchema("v4");
+            modelBuilder.HasDefaultSchema("Notify");
 
-            foreach (var assembly in ClassHelper.FromAssemblies())
+            var modelAssemblies = ClassHelper.FromAssemblies();
+            foreach (var assembly in modelAssemblies)
                 modelBuilder.Configurations.AddFromAssembly(assembly);
 
             base.OnModelCreating(modelBuilder);

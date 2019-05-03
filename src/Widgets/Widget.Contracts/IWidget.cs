@@ -4,14 +4,4 @@
     {
         string WidgetName { get; }
     }
-
-    public interface ICrossDomainWidget : IWidget
-    {
-
-    }
-
-    public interface IDomainWidget : IWidget
-    {
-        
-    }
 }

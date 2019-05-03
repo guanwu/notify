@@ -6,7 +6,6 @@ namespace Guanwu.Notify.Widget.FileSystemProfile
     {
         public static WidgetConfig Config = new WidgetConfig(Assembly.GetExecutingAssembly().Location);
         public static readonly string PROFILE_DIR = Config["PROFILE_DIR"];
-        public const string DEFAULT_KEY = "0";
     }
 }
 

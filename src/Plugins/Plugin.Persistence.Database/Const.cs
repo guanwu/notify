@@ -2,6 +2,6 @@
 {
     internal static class Const
     {
-        public const string PLUGIN_NAME = "Plugin.Persistence.Database";
+        public const string PLUGIN_NAME = "persistence_database";
     }
 }

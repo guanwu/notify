@@ -5,7 +5,7 @@ namespace Guanwu.Notify.Widget
 {
     public delegate void PipelineMessageEventHandler(byte[] body, Dictionary<string, string> context);
 
-    public interface IPipelineMessenger : IDomainWidget
+    public interface IPipelineMessenger : IWidget
     {
         event PipelineMessageEventHandler OnMessageReceived;
         event PipelineMessageEventHandler OnMessagePersisting;

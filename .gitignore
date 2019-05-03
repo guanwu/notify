@@ -24,3 +24,10 @@
 /src/Widgets/Widget.DbContext.SqlServer/obj
 /src/Widgets/Widget.FileSystemMessenger/obj
 /src/Widgets/Widget.FileSystemProfile/obj
+/src/Container/NotifyHangfireWeb/bin
+/src/Container/NotifyHangfireWeb/obj
+/src/Plugins/Plugin.Report/obj
+/src/Plugins/Plugin.Transformer.Xml/bin
+/src/Widgets/Widget.Contracts.Persistence/obj
+/src/Widgets/Widget.Persistence/bin
+/src/Widgets/Widget.Persistence/obj

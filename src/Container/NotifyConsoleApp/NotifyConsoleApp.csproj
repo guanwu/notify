@@ -143,6 +143,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Widgets\Widget.Contracts.Persistence\Widget.Contracts.Persistence.csproj">
+      <Project>{DB466E0C-825A-430E-BB64-0D2A28F3EC6C}</Project>
+      <Name>Widget.Contracts.Persistence</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Widgets\Widget.Contracts\Widget.Contracts.csproj">
       <Project>{a281ed88-01f5-46a8-a265-b9153962fa7a}</Project>
       <Name>Widget.Contracts</Name>

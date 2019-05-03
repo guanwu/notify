@@ -1,7 +1,9 @@
 ﻿using Guanwu.Toolkit.Extensions;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Guanwu.Notify.Widget.FileSystemProfile.Json
@@ -13,14 +15,26 @@ namespace Guanwu.Notify.Widget.FileSystemProfile.Json
 
         private ConcurrentDictionary<string, string> Profiles { get; set; }
 
-        public dynamic Get(string name, string key = "")
+        public IEnumerable<object> LoadProfile(string profileKey, string pluginName, params string[] scopes)
         {
-            string profileKey = $"{name}.{key}";
-            bool existsProfile = Profiles.ContainsKey(profileKey);
-            if (!existsProfile) profileKey = $"{name}.{Const.DEFAULT_KEY}";
+            dynamic profile = LoadProfile(profileKey);
+            if (profile == null) yield break;
 
-            string profileValue = Profiles[profileKey];
-            return profileValue.FromJson<dynamic>();
+            bool? isPluginActive = profile.Plugins.IsActive[pluginName];
+            if (!isPluginActive.HasValue) yield break;
+            if (!isPluginActive.Value) yield break;
+
+            dynamic pluginNode = profile.Plugins[pluginName];
+            if (pluginNode == null) yield break;
+
+            foreach (dynamic nodeItem in pluginNode) {
+                dynamic itemAll = nodeItem.System.All;
+                if(itemAll != null) {
+                    string[] conditionAll = itemAll.ToObject<string[]>();
+                    if (!conditionAll.Except(scopes).Any())
+                        yield return nodeItem;
+                }
+            }
         }
 
         public void Refresh()
@@ -28,7 +42,7 @@ namespace Guanwu.Notify.Widget.FileSystemProfile.Json
             Directory.CreateDirectory(Const.PROFILE_DIR);
 
             var profiles = new ConcurrentDictionary<string, string>();
-            var profileFiles = Directory.EnumerateFiles(Const.PROFILE_DIR, Const.PATTERN, SearchOption.AllDirectories);
+            var profileFiles = Directory.EnumerateFiles(Const.PROFILE_DIR, Const.PATTERN);
 
             Parallel.ForEach(profileFiles, f => {
                 string fileName = Path.GetFileNameWithoutExtension(f);
@@ -38,5 +52,12 @@ namespace Guanwu.Notify.Widget.FileSystemProfile.Json
 
             Profiles = profiles;
         }
+
+        private dynamic LoadProfile(string profileKey)
+        {
+            string profileValue = Profiles[profileKey];
+            return profileValue.FromJson<dynamic>();
+        }
+
     }
 }

@@ -34,12 +34,29 @@
     <Reference Include="Guanwu.Toolkit, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\Guanwu.Toolkit.1.2.1\lib\netstandard2.0\Guanwu.Toolkit.dll</HintPath>
     </Reference>
+    <Reference Include="Guanwu.Toolkit.Serialization, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\Guanwu.Toolkit.Serialization.1.0.1\lib\netstandard2.0\Guanwu.Toolkit.Serialization.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\Microsoft.Extensions.Logging.Abstractions.2.2.0\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.AddIn" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.OracleClient" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Security.AccessControl, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\System.Security.AccessControl.4.5.0\lib\net461\System.Security.AccessControl.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Permissions, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\System.Security.Permissions.4.5.0\lib\net461\System.Security.Permissions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\System.Security.Principal.Windows.4.5.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -53,14 +70,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Persistence\Persistence.Models\Persistence.Models.csproj">
-      <Project>{814AF814-172B-460D-AD97-D055B565BA24}</Project>
-      <Name>Persistence.Models</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Pipeline\Pipeline.ShareViews\Pipeline.ShareViews.csproj">
       <Project>{88e05740-58e0-46ca-b681-a72628b57712}</Project>
       <Name>Pipeline.ShareViews</Name>
       <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Widgets\Widget.Contracts.Persistence\Widget.Contracts.Persistence.csproj">
+      <Project>{DB466E0C-825A-430E-BB64-0D2A28F3EC6C}</Project>
+      <Name>Widget.Contracts.Persistence</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Widgets\Widget.Contracts\Widget.Contracts.csproj">
       <Project>{a281ed88-01f5-46a8-a265-b9153962fa7a}</Project>

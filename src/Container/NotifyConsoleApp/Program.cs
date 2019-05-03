@@ -1,12 +1,14 @@
 ﻿using Guanwu.Notify.Views;
 using Guanwu.Notify.Widget;
+using Guanwu.Notify.Widget.Persistence;
 using Guanwu.Toolkit.Extensions;
+using Guanwu.Toolkit.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.AddIn.Hosting;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,204 +18,216 @@ namespace Guanwu.NotifyConsoleApp
 {
     class Program
     {
-        private ICollection<IPlugin> Plugins;
-        private ICollection<IDomainWidget> DomainWidgets;
-        private IPluginObject PluginObject = new PluginObject(Logger);
-        private static ILogger Logger = NullLogger.Instance;
+        private static ILogger Logger = LoadLogger().Result;
+        private static readonly string HANGFIRE = ConfigurationManager.AppSettings[WidgetConst.HANGFIRE];
+
 
         public static int Main(string[] args)
         {
-            Logger = InitLogger();
-            return new Program().RunMain();
+            return RunMain();
         }
 
-        private static ILogger InitLogger()
+        private static int RunMain()
         {
-            ILoggerFactory factory = new LoggerFactory().AddConsole();
-            return factory.CreateLogger<Program>();
-        }
-
-        private int RunMain()
-        {
-            try
-            {
+            try {
+                var pluginObject = new PluginObject();
                 Task.WaitAll(
-                    Task.Run(() => LoadPlugins()),
-                    Task.Run(() => LoadDomainWidgets())
+                    Task.Run(() => InitPlugins(LoadPlugins(), pluginObject))
+                        .ContinueWith(_ => InitMessengers(LoadMessengers(), pluginObject))
                 );
-
-                Task.WaitAll(
-                    Task.Run(() => InitializePlugins())
-                        .ContinueWith(_ => InitializeMessengers())
-                );
-
-                Console.WriteLine("\nPress any key to exit.");
                 Console.ReadKey();
                 return 0;
             }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, ex.Message);
-                Console.WriteLine("\nPress any key to exit.");
+            catch (Exception ex) {
+                Console.WriteLine(ex);
+                Console.WriteLine("\nPress and key to exit.");
                 Console.ReadKey();
                 return 1;
             }
         }
 
-        private void InitializeMessengers()
+        #region Plugins
+
+        private static async Task InitPlugins(Task<IPlugin[]> plugins, PluginObject pluginObject)
         {
-            Logger.LogTrace(nameof(InitializeMessengers));
+            Guard.AgainstNull(nameof(plugins), plugins);
+            Guard.AgainstNull(nameof(pluginObject), pluginObject);
 
-            if (DomainWidgets == null) return;
-
-            var options = new ParallelOptions { MaxDegreeOfParallelism = 1 };
-            Parallel.ForEach(DomainWidgets, options, w =>
-            {
-                try
-                {
-                    if (typeof(IPipelineMessenger).IsAssignableFrom(w.GetType()))
-                    {
-                        var messenger = w as IPipelineMessenger;
-                        messenger.OnMessageReceived += OnMessageRecived;
-                        messenger.Initialize(Logger);
-                    }
+            await Task.Run(() => {
+                try {
+                    var options = new ParallelOptions { MaxDegreeOfParallelism = 1 };
+                    Parallel.ForEach(plugins.Result, options, plugin => {
+                        plugin.Initialize(pluginObject);
+                        plugin.Execute();
+                    });
                 }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, ex.Message);
+                catch (AggregateException e) {
+                    foreach (var ie in e.InnerExceptions)
+                        Console.WriteLine(ie.ToString());
                 }
             });
         }
-
-        private void OnMessageRecived(byte[] body, Dictionary<string, string> context)
+        private static async Task<IPlugin[]> LoadPlugins()
         {
-            try
+            async Task<IPlugin> ActivePlugin(AddInToken token)
             {
-                var message = new PipelineMessage
-                {
+                AppDomain pluginDomain = CreatePluginDomain(token);
+                pluginDomain.SetData(WidgetConst.HANGFIRE, HANGFIRE);
+                pluginDomain.DoCallBack(new CrossAppDomainDelegate(PluginCallBackAsync));
+                return await Task.Run(() => token.Activate<IPlugin>(pluginDomain));
+            }
+
+            return await Task.Run(() => {
+                var tasks = new List<Task<IPlugin>>();
+                try {
+                    var pipeline = Path.Combine(
+                        Environment.CurrentDirectory, ContainerConst.PLUGIN_PATH);
+                    var warnings = AddInStore.Rebuild(pipeline);
+                    var tokens = AddInStore.FindAddIns(typeof(IPlugin), pipeline);
+
+                    foreach (var token in tokens)
+                        tasks.Add(ActivePlugin(token));
+                    Task.WaitAll(tasks.ToArray());
+
+                    return tasks
+                        .Select(t => t.Result)
+                        .ToArray();
+                }
+                catch (AggregateException e) {
+                    foreach (var ie in e.InnerExceptions)
+                        Console.WriteLine(ie.ToString());
+                    return new IPlugin[0];
+                }
+            });
+        }
+        private static AppDomain CreatePluginDomain(AddInToken token)
+        {
+            string GetPluginLocation(AddInToken t)
+            {
+                object tokenAddIn = t.GetField<object>("_addin");
+                return tokenAddIn.GetProperty<string>("Location");
+            }
+
+            var security = AppDomain.CurrentDomain.Evidence;
+            var setup = new AppDomainSetup {
+                ConfigurationFile = $"{GetPluginLocation(token)}.config",
+            };
+            return AppDomain.CreateDomain(token.Name, security, setup);
+        }
+        private static void PluginCallBackAsync()
+        {
+            var pluginDbContext = LoadDbContextWidget();
+            var pluginRepository = LoadRepository();
+            var pluginProfile = LoadProfileWidget();
+            var pluginLogger = LoadLogger();
+
+            AppDomain pluginDomain = AppDomain.CurrentDomain;
+            pluginDomain.SetData(WidgetConst.IDBCONTEXT, pluginDbContext.Result);
+            pluginDomain.SetData(WidgetConst.IREPOSITORY, pluginRepository.Result);
+            pluginDomain.SetData(WidgetConst.IPROFILE, pluginProfile.Result);
+            pluginDomain.SetData(WidgetConst.ILOGGER, pluginLogger.Result);
+
+            Task.WaitAll(pluginDbContext, pluginRepository, pluginProfile, pluginLogger);
+        }
+        private static async Task<ILogger> LoadLogger()
+        {
+            try {
+                return await Task.Run(() => {
+                    ILoggerFactory factory = new LoggerFactory();
+                    return factory.AddConsole().CreateLogger<Program>();
+                });
+            }
+            catch {
+                return NullLogger.Instance;
+            }
+        }
+        private static async Task<IProfile> LoadProfileWidget()
+        {
+            try {
+                return await Task.Run(() => {
+                    return WidgetContainer.Instance
+                        .ResolveWidgets<IProfile>()
+                        .FirstOrDefault();
+                });
+            }
+            catch {
+                return null;
+            }
+        }
+        private static async Task<IDbContext> LoadDbContextWidget()
+        {
+            try {
+                return await Task.Run(() => {
+                    return WidgetContainer.Instance
+                        .ResolveWidgets<IDbContext>()
+                        .FirstOrDefault();
+                });
+            }
+            catch {
+                return null;
+            }
+        }
+        private static async Task<IRepository> LoadRepository()
+        {
+            try {
+                return await Task.Run(() => {
+                    return WidgetContainer.Instance
+                        .ResolveWidgets<IRepository>()
+                        .FirstOrDefault();
+                });
+            }
+            catch {
+                return null;
+            }
+        }
+
+        #endregion
+
+        #region Messengers
+
+        private static async Task InitMessengers(Task<IPipelineMessenger[]> messengers, PluginObject pluginObject)
+        {
+            Guard.AgainstNull(nameof(messengers), messengers);
+            Guard.AgainstNull(nameof(pluginObject), pluginObject);
+
+            void OnMessageRecived(byte[] body, Dictionary<string, string> context)
+            {
+                var message = new PipelineMessage {
                     Id = context[WidgetConst.PMSG_ID],
-                    Source = context[WidgetConst.PMSGR_ID],
+                    Source = context[WidgetConst.PMSG_SOURCE],
                     Content = Encoding.UTF8.GetString(body),
                 };
-                PluginObject.ReceiveMessage(message);
+                pluginObject.ReceiveMessage(message);
             }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, ex.Message);
-            }
-        }
 
-        private void InitializePlugins()
-        {
-            Logger.LogTrace(nameof(InitializePlugins));
-
-            if (Plugins == null) return;
-
-            var options = new ParallelOptions { MaxDegreeOfParallelism = 1 };
-            Parallel.ForEach(Plugins, options, p =>
-            {
-                try
-                {
-                    p.Initialize(PluginObject);
+            await Task.Run(() => {
+                try {
+                    var options = new ParallelOptions { MaxDegreeOfParallelism = 1 };
+                    Parallel.ForEach(messengers.Result, options, messenger => {
+                        messenger.OnMessageReceived += OnMessageRecived;
+                        messenger.Initialize(Logger);
+                    });
                 }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, ex.Message);
+                catch (AggregateException e) {
+                    foreach (var ie in e.InnerExceptions)
+                        Console.WriteLine(ie.ToString());
                 }
             });
         }
-
-        private void LoadDomainWidgets()
+        private static async Task<IPipelineMessenger[]> LoadMessengers()
         {
-            Logger.LogTrace(nameof(LoadDomainWidgets));
-
-            DomainWidgets = WidgetContainer.Instance
-                .ResolveWidgets<IDomainWidget>()
-                .ToArray();
+            try {
+                return await Task.Run(() => {
+                    return WidgetContainer.Instance
+                        .ResolveWidgets<IPipelineMessenger>()
+                        .ToArray();
+                });
+            }
+            catch {
+                return new IPipelineMessenger[0];
+            }
         }
 
-        private void LoadPlugins()
-        {
-            Logger.LogTrace(nameof(LoadPlugins));
-
-            string pluginPath = Path.Combine(Environment.CurrentDirectory, ContainerConst.PLUGIN_PATH);
-            Logger.LogWarning(string.Join(Environment.NewLine, AddInStore.Rebuild(pluginPath)));
-
-            var pluginBag = new ConcurrentBag<IPlugin>();
-            ICollection<AddInToken> pluginTokens = AddInStore.FindAddIns(typeof(IPlugin), pluginPath);
-
-            var options = new ParallelOptions { MaxDegreeOfParallelism = 1 };
-            Parallel.ForEach(pluginTokens, options, t =>
-            {
-                try
-                {
-                    AppDomain pluginDomain = CreatePluginDomain(t);
-                    pluginDomain.DoCallBack(CrossDomainCallback);
-
-                    IPlugin plugin = t.Activate<IPlugin>(pluginDomain);
-                    pluginBag.Add(plugin);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, ex.Message);
-                }
-            });
-
-            Plugins = pluginBag.ToArray();
-        }
-
-        private static void CrossDomainCallback()
-        {
-            // Here's the plugin app domain
-            AppDomain pluginDomain = AppDomain.CurrentDomain;
-
-            IDbContext dbContext = LoadDbContextWidget();
-            pluginDomain.SetData(WidgetConst.IDBCONTEXT, dbContext);
-
-            IProfile profile = LoadProfileWidget();
-            profile.Refresh();
-            pluginDomain.SetData(WidgetConst.IPROFILE, profile);
-
-            ILogger logger = InitLogger();
-            pluginDomain.SetData(WidgetConst.ILOGGER, logger);
-        }
-
-        private static IProfile LoadProfileWidget()
-        {
-            return WidgetContainer.Instance
-                .ResolveWidgets<IProfile>()
-                .FirstOrDefault();
-        }
-
-        private static IDbContext LoadDbContextWidget()
-        {
-            return WidgetContainer.Instance
-                .ResolveWidgets<IDbContext>()
-                .FirstOrDefault();
-        }
-
-        private AppDomain CreatePluginDomain(AddInToken token)
-        {
-            // Here's the console app domain
-            // So we need create new plugin domain
-            string pluginLocation = GetPluginLocation(token);
-            string pluginConfig = $"{pluginLocation}.config";
-
-            var securityInfo = AppDomain.CurrentDomain.Evidence;
-            var domainSetup = new AppDomainSetup()
-            {
-                ConfigurationFile = pluginConfig,
-                PrivateBinPath = ContainerConst.WIDGET_PRIVATE_PATH
-            };
-
-            return AppDomain.CreateDomain(token.Name, securityInfo, domainSetup);
-        }
-
-        private string GetPluginLocation(AddInToken token)
-        {
-            object tokenAddIn = token.GetField<object>("_addin");
-            return tokenAddIn.GetProperty<string>("Location");
-        }
-
+        #endregion
     }
 }
