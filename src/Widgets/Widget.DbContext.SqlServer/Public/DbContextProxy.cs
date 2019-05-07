@@ -9,10 +9,6 @@ namespace Guanwu.Notify.Widget.DbContext.SqlServer
 {
     public sealed class DbContextProxy : IDbContext
     {
-        //private static readonly Lazy<SqlServerDbContext> LazyContext =
-        //    new Lazy<SqlServerDbContext>(() => new SqlServerDbContext(Const.DBCONNECT));
-        //private SqlServerDbContext Context => LazyContext.Value;
-
         public string WidgetName => Const.WIDGET_NAME;
 
         public List<TElement> FromSql<TElement>(string sql, params object[] parameters)
@@ -35,23 +31,6 @@ namespace Guanwu.Notify.Widget.DbContext.SqlServer
             var context = new SqlServerDbContext(Const.DBCONNECT);
             return context.Set<TEntity>().AsNoTracking().AsQueryable();
         }
-
-        //public void Reference<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> navigationProperty)
-        //    where TEntity : class
-        //    where TProperty : class
-        //{
-
-        //    Context.Entry(entity).Reference(navigationProperty).Load();
-        //}
-
-        //public void Collection<TEntity, TElement>(TEntity entity, Expression<Func<TEntity, ICollection<TElement>>> navigationProperty)
-        //    where TEntity : class
-        //    where TElement : class
-        //{
-        //    lock (Context) {
-        //        Context.Entry(entity).Collection(navigationProperty).Load();
-        //    }
-        //}
 
     }
 }

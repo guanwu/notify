@@ -9,8 +9,9 @@ namespace Guanwu.Notify.Widget.Persistence
         IQueryable<TEntity> QueryEntities<TEntity>() where TEntity : class;
 
         void AddJob(
-            string jobId,
-            string content,
+            string sessionId, 
+            string jobId, 
+            string content, 
             long? createdAt);
 
         void AddJobParam(

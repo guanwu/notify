@@ -31,3 +31,6 @@
 /src/Widgets/Widget.Contracts.Persistence/obj
 /src/Widgets/Widget.Persistence/bin
 /src/Widgets/Widget.Persistence/obj
+/src/Plugins/Plugin.Kjt.Ningbo/bin
+/src/Plugins/Plugin.Kjt.Ningbo/obj
+/src/Plugins/Plugin.Transport.Folder/obj

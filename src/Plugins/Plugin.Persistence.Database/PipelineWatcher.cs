@@ -2,6 +2,7 @@
 using Guanwu.Notify.Widget;
 using Guanwu.Notify.Widget.Persistence;
 using Guanwu.Toolkit.Extensions;
+using Guanwu.Toolkit.Helpers;
 using Guanwu.Toolkit.Utils;
 using Microsoft.Extensions.Logging;
 using System;
@@ -60,52 +61,23 @@ namespace Guanwu.Notify.Plugin.Persistence.Database
             string scopes = meta.scopes;
             Guard.AgainstNullAndEmpty(nameof(scopes), scopes);
 
-            pMessage.Targets = new[] { appId, scopes };
+            pMessage.Targets.Add(appId);
+            pMessage.Targets.Add(scopes);
         }
 
         private void PersistMessage(PipelineMessage pMessage)
         {
-            Guard.AgainstNullAndEmpty(nameof(pMessage.Content), pMessage.Content);
-            Guard.AgainstNullAndEmpty(nameof(pMessage.Source), pMessage.Source);
             Guard.AgainstNullAndEmpty(nameof(pMessage.Id), pMessage.Id);
+            Guard.AgainstNullAndEmpty(nameof(pMessage.Content), pMessage.Content);
+            Guard.AgainstNull(nameof(pMessage.Targets), pMessage.Targets);
 
             try {
-                Repository.AddJob(pMessage.Id, pMessage.Content, null);
+                string jobId = pMessage.Targets[WidgetConst.PMSGIDX_JOBID];
+                Repository.AddJob(pMessage.Id, jobId, pMessage.Content, null);
             }
             catch (Exception ex) {
                 Logger.LogCritical(ex, ex.ToString());
             }
         }
-
-        //private void SaveMessageAttributes(ref PipelineMessage pMessage)
-        //{
-        //    Guard.AgainstNullAndEmpty(nameof(pMessage.Content), pMessage.Content);
-        //    Guard.AgainstNullAndEmpty(nameof(pMessage.Source), pMessage.Source);
-        //    Guard.AgainstNullAndEmpty(nameof(pMessage.Id), pMessage.Id);
-
-        //    string messageId = pMessage.Id;
-        //    long timestamp = Generator.Timestamp;
-        //    MessageAttribute BuildAttribute(string name, string value)
-        //    {
-        //        return new MessageAttribute {
-        //            CreationTime = timestamp,
-        //            Creator = PluginName,
-        //            Id = Generator.RandomLongId,
-        //            MessageId = messageId,
-        //            Key = name,
-        //            Value = value,
-        //        };
-        //    }
-
-        //    var attributes = new List<MessageAttribute>();
-        //    attributes.Add(BuildAttribute(WidgetConst.PMSG_APPID, pMessage.Targets[0]));
-        //    attributes.AddRange(pMessage.Targets[1].Split(';').Select(t => BuildAttribute(WidgetConst.PMSG_SCOPE, t)));
-
-        //    int rows = DbContext.InsertEntities(attributes);
-        //    if (rows > 0)
-        //        Logger.LogInformation($"{rows} rows affected.");
-        //    else
-        //        Logger.LogCritical($"Message({messageId}) attributes persistence exception.");
-        //}
     }
 }

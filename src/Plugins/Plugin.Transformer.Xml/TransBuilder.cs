@@ -23,15 +23,21 @@ namespace Guanwu.Notify.Plugin.Transformer.Xml
         }
 
         [Hangfire.Queue(Const.PLUGIN_NAME)]
+        public void AddJobParam(string jobId, string paramId, string name, string value, string createdBy)
+        {
+            Repository.AddJobParam(jobId, paramId, name, value, createdBy, null);
+        }
+
+        [Hangfire.Queue(Const.PLUGIN_NAME)]
         public void AddJobTask(string jobId, string taskId, string taskName)
         {
             Repository.AddJobTask(jobId, taskId, taskName, null);
         }
 
         [Hangfire.Queue(Const.PLUGIN_NAME)]
-        public void AddTaskState(string taskId, string stateId, string stateName)
+        public void AddTaskState(string taskId, string stateName)
         {
-            Repository.AddTaskState(taskId, stateId, stateName, null);
+            Repository.AddTaskState(taskId, null, stateName, null);
         }
 
         [Hangfire.Queue(Const.PLUGIN_NAME)]
@@ -39,12 +45,12 @@ namespace Guanwu.Notify.Plugin.Transformer.Xml
         {
             Job job = Repository.QueryEntities<Job>()
                 .Single(t => t.JobId == jobId);
-            JobParam profile = Repository.QueryEntities<JobParam>()
+            JobParam profileParam = Repository.QueryEntities<JobParam>()
                 .Single(t => t.ParamId == profileId);
 
             var taskRequest = new Dictionary<string, object> {
                 { "Content", job.Content.FromJson<object>() },
-                { "Profile", profile.Value.FromJson<dynamic>() }
+                { "Profile", profileParam.Value.FromJson<dynamic>() }
             };
             string requestXml = taskRequest.ToXml();
 
@@ -52,7 +58,7 @@ namespace Guanwu.Notify.Plugin.Transformer.Xml
         }
 
         [Hangfire.Queue(Const.PLUGIN_NAME)]
-        public void AddTaskResponse(string taskId, string requestId, string jobId)
+        public void AddTaskResponse(string taskId, string requestId, string sessionId)
         {
             TaskRequest request = Repository.QueryEntities<TaskRequest>()
                 .Single(t => t.RequestId == requestId);
@@ -66,20 +72,17 @@ namespace Guanwu.Notify.Plugin.Transformer.Xml
 
             string directory = profile.Directory;
             string datePattern = profile.DatePattern;
-            Task.Run(() => TryWriteFile(directory, jobId, responseXml));
+            Task.Run(() => TryWriteFile(directory, sessionId, responseXml));
 
             Repository.AddTaskResponse(requestId, responseXml, null);
-            AddTaskState(taskId, null, nameof(TaskStates.Completed));
+            AddTaskState(taskId, nameof(TaskStates.Completed));
         }
 
         private void TryWriteFile(string directory, string name, string content)
         {
             try {
-                string folder = Path.Combine(directory,
-                    DateTime.Now.ToString("yyyyMMdd"));
-                Directory.CreateDirectory(folder);
-
-                string path = Path.Combine(folder, $"{name}.xml");
+                Directory.CreateDirectory(directory);
+                string path = Path.Combine(directory, $"{name}.xml");
                 File.WriteAllText(path, content);
             }
             catch (Exception ex) {

@@ -196,6 +196,7 @@ namespace Guanwu.NotifyConsoleApp
                     Id = context[WidgetConst.PMSG_ID],
                     Source = context[WidgetConst.PMSG_SOURCE],
                     Content = Encoding.UTF8.GetString(body),
+                    Targets = new List<string> { context[WidgetConst.PMSG_JOBID] },
                 };
                 pluginObject.ReceiveMessage(message);
             }

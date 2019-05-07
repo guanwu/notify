@@ -21,6 +21,9 @@ namespace Guanwu.Notify.Persistence.Models.Mapper
 
             this.Property(t => t.CreatedAt)
                 .HasColumnOrder(30);
+
+            this.Property(t => t.SessionId)
+                .HasColumnOrder(40);
         }
     }
 }

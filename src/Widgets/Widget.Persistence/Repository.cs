@@ -3,7 +3,6 @@ using Guanwu.Toolkit.Extensions;
 using Guanwu.Toolkit.Helpers;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
 
 namespace Guanwu.Notify.Widget.Persistence
@@ -13,19 +12,15 @@ namespace Guanwu.Notify.Widget.Persistence
         public string WidgetName => Const.WIDGET_NAME;
         private IDbContext DbContext => AppDomain.CurrentDomain.GetData(WidgetConst.IDBCONTEXT) as IDbContext;
 
-        public void AddJob(string jobId, string content, long? createdAt)
+        public void AddJob(string sessionId, string jobId, string content, long? createdAt)
         {
             var job = new Job {
                 Content = content,
                 CreatedAt = createdAt ?? Generator.Timestamp,
                 JobId = jobId ?? Generator.RandomLongId,
+                SessionId = sessionId ?? Generator.RandomLongId,
             };
-
-            try {
-                DbContext?.InsertEntities(job);
-            }
-            catch (Exception ex) when ((ex.GetBaseException() as SqlException)?.Number == 2627) { }
-            catch { throw; }
+            DbContext?.InsertEntities(job);
         }
 
         public void AddJobParam(string jobId, string paramId, string name, string value, string createdBy, long? createdAt)

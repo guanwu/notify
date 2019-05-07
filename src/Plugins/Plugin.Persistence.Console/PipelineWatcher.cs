@@ -9,8 +9,6 @@ namespace Guanwu.Notify.Plugin.Persistence.Console
     [AddIn(Const.PLUGIN_NAME)]
     public sealed class PipelineWatcher : IPlugin
     {
-        private string PluginName => Const.PLUGIN_NAME;
-
         private IPluginObject PluginObject;
         private ILogger Logger;
 
@@ -24,7 +22,7 @@ namespace Guanwu.Notify.Plugin.Persistence.Console
             PluginObject.OnMessageReceived += OnMessageReceived;
             PluginObject.OnEventRaising += OnEventRaising;
 
-            Logger.LogInformation($">>>> {PluginName} <<<<");
+            Logger.LogInformation($">>>> {Const.PLUGIN_NAME} <<<<");
         }
 
         private void OnEventRaising(object sender, PipelineEventEventArgs e)

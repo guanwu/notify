@@ -17,8 +17,9 @@ namespace Guanwu.Notify.Plugin.Report
 
         public void Execute()
         {
-            Guard.AgainstNullAndEmpty(nameof(HangfireConn), HangfireConn);
-            GlobalConfiguration.Configuration
+            try {
+                Guard.AgainstNullAndEmpty(nameof(HangfireConn), HangfireConn);
+                GlobalConfiguration.Configuration
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
                 .UseSqlServerStorage(HangfireConn, new SqlServerStorageOptions {
                     CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
@@ -28,9 +29,13 @@ namespace Guanwu.Notify.Plugin.Report
                     UsePageLocksOnDequeue = true,
                     DisableGlobalLocks = true
                 });
-            new BackgroundJobServer(new BackgroundJobServerOptions {
-                Queues = new[] { Const.PLUGIN_NAME }
-            });
+                new BackgroundJobServer(new BackgroundJobServerOptions {
+                    Queues = new[] { Const.PLUGIN_NAME }
+                });
+            }
+            catch (Exception ex) {
+                Logger.LogError(ex, ex.ToString());
+            }
 
             //RecurringJob.AddOrUpdate<ReportBuilder>(t => t.BuildReport("exec [Notify].[Notify].[sp_last_status];", "Output\\Kjt.Reports", "last_status.json"), Cron.Minutely);
         }

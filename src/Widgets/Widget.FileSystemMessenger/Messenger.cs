@@ -1,4 +1,5 @@
-﻿using Guanwu.Toolkit.IO;
+﻿using Guanwu.Toolkit.Helpers;
+using Guanwu.Toolkit.IO;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
@@ -6,10 +7,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Guanwu.Notify.Widget.FileSystemMessenger.Message
+namespace Guanwu.Notify.Widget.FileSystemMessenger
 {
     [Serializable]
-    public sealed class JsonMessage : MarshalByRefObject, IPipelineMessenger
+    public sealed class Messenger : MarshalByRefObject, IPipelineMessenger
     {
         public string WidgetName => Const.WIDGET_NAME;
 
@@ -23,7 +24,7 @@ namespace Guanwu.Notify.Widget.FileSystemMessenger.Message
         public void Initialize(ILogger logger = default)
         {
             Logger = logger ?? NullLogger.Instance;
-            Logger.LogInformation($">>>> {WidgetName} <<<<");
+            Logger.LogInformation($"++++ {WidgetName} ++++");
 
             try {
                 Directory.CreateDirectory(Const.DIRECTORY);
@@ -31,7 +32,7 @@ namespace Guanwu.Notify.Widget.FileSystemMessenger.Message
                     Directory = Const.DIRECTORY,
                     Filter = Const.FILTER
                 };
-                FileWatcher.OnFileCreated += OnFileCreatedAsync;
+                FileWatcher.OnFileCreated += OnFileCreated;
                 FileWatcher.Start();
             }
             catch (Exception ex) {
@@ -39,21 +40,23 @@ namespace Guanwu.Notify.Widget.FileSystemMessenger.Message
             }
         }
 
-        private void OnFileCreatedAsync(object sender, FileWatcherInfo e)
+        private void OnFileCreated(object sender, FileWatcherInfo e)
         {
             if (OnMessageReceived == null) return;
             if (e == null) return;
 
-            Task.Run(() => TryBackup(e));
-            Task.Run(() => TryPushMessage(e));
+            string jobId = Generator.RandomLongId;
+            Task.Run(() => TryBackup(e, jobId));
+            Task.Run(() => TryPushMessage(e, jobId));
         }
 
-        private void TryPushMessage(FileWatcherInfo info)
+        private void TryPushMessage(FileWatcherInfo info, string jobId)
         {
             try {
                 var context = new Dictionary<string, string> {
                     { WidgetConst.PMSG_ID, Path.GetFileNameWithoutExtension(info.Name) },
-                    { WidgetConst.PMSG_SOURCE, WidgetName }
+                    { WidgetConst.PMSG_JOBID, jobId },
+                    { WidgetConst.PMSG_SOURCE, WidgetName },
                 };
 
                 Parallel.ForEach(OnMessageReceived.GetInvocationList(), t => {
@@ -66,14 +69,13 @@ namespace Guanwu.Notify.Widget.FileSystemMessenger.Message
             }
         }
 
-        private void TryBackup(FileWatcherInfo info)
+        private void TryBackup(FileWatcherInfo info, string jobId)
         {
             try {
                 string backupDir = Path.Combine(Const.DIRECTORY, DateTime.Now.ToString(Const.BACKUP_PATTERN));
                 Directory.CreateDirectory(backupDir);
 
-                string backupPath = Path.Combine(backupDir, info.Name);
-                File.Delete(backupPath);
+                string backupPath = Path.Combine(backupDir, jobId + ".json");
                 File.Move(info.FullName, backupPath);
             }
             catch (Exception ex) {
