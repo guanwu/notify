@@ -30,15 +30,16 @@ namespace Guanwu.Notify.Plugin.Kjt.Ningbo
                 GlobalConfiguration.Configuration
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
                 .UseSqlServerStorage(HangfireConn, new SqlServerStorageOptions {
+                    PrepareSchemaIfNecessary = false,
                     CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
                     SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
                     QueuePollInterval = TimeSpan.Zero,
                     UseRecommendedIsolationLevel = true,
                     UsePageLocksOnDequeue = true,
-                    DisableGlobalLocks = true
+                    DisableGlobalLocks = true,
                 });
                 new BackgroundJobServer(new BackgroundJobServerOptions {
-                    Queues = new[] { Const.PLUGIN_NAME }
+                    Queues = new[] { Const.PLUGIN_NAME },
                 });
             }
             catch (Exception ex) {
@@ -53,7 +54,7 @@ namespace Guanwu.Notify.Plugin.Kjt.Ningbo
             HangfireConn = AppDomain.CurrentDomain.GetData(WidgetConst.HANGFIRE) as string;
 
             pluginObject.OnMessagePersisted += OnMessagePersisted;
-            Logger.LogInformation($">>>> {Const.PLUGIN_NAME} <<<<");
+            Logger.LogInformation($">>>> {Const.PLUGIN_NAME}: {AppDomain.CurrentDomain.Id} <<<<");
         }
 
         private void OnMessagePersisted(object sender, PipelineMessageEventArgs e)

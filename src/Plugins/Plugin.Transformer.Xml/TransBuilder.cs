@@ -7,10 +7,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Guanwu.Notify.Plugin.Transformer.Xml
 {
+    [Hangfire.Queue(Const.PLUGIN_NAME)]
     public class TransBuilder
     {
         private readonly IRepository Repository;
@@ -22,25 +25,21 @@ namespace Guanwu.Notify.Plugin.Transformer.Xml
             Logger = AppDomain.CurrentDomain.GetData(WidgetConst.ILOGGER) as ILogger;
         }
 
-        [Hangfire.Queue(Const.PLUGIN_NAME)]
         public void AddJobParam(string jobId, string paramId, string name, string value, string createdBy)
         {
             Repository.AddJobParam(jobId, paramId, name, value, createdBy, null);
         }
 
-        [Hangfire.Queue(Const.PLUGIN_NAME)]
         public void AddJobTask(string jobId, string taskId, string taskName)
         {
             Repository.AddJobTask(jobId, taskId, taskName, null);
         }
 
-        [Hangfire.Queue(Const.PLUGIN_NAME)]
         public void AddTaskState(string taskId, string stateName)
         {
             Repository.AddTaskState(taskId, null, stateName, null);
         }
 
-        [Hangfire.Queue(Const.PLUGIN_NAME)]
         public void AddTaskRequest(string taskId, string requestId, string jobId, string profileId)
         {
             Job job = Repository.QueryEntities<Job>()
@@ -57,7 +56,6 @@ namespace Guanwu.Notify.Plugin.Transformer.Xml
             Repository.AddTaskRequest(taskId, requestId, requestXml, null);
         }
 
-        [Hangfire.Queue(Const.PLUGIN_NAME)]
         public void AddTaskResponse(string taskId, string requestId, string sessionId)
         {
             TaskRequest request = Repository.QueryEntities<TaskRequest>()
@@ -83,7 +81,13 @@ namespace Guanwu.Notify.Plugin.Transformer.Xml
             try {
                 Directory.CreateDirectory(directory);
                 string path = Path.Combine(directory, $"{name}.xml");
-                File.WriteAllText(path, content);
+
+                while (File.Exists(path) && path.IsLocked()) {
+                    Logger.LogWarning($"File({path}) is in use, wait 5 seconds and try again.");
+                    SpinWait.SpinUntil(() => false, 5000);
+                }
+
+                File.WriteAllText(path, content, new UTF8Encoding(false));
             }
             catch (Exception ex) {
                 Logger.LogError(ex, ex.ToString());

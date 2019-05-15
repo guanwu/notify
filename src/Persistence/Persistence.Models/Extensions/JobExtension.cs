@@ -19,5 +19,11 @@ namespace Guanwu.Notify.Persistence.Models
                 .OrderBy(t => t.CreatedAt)
                 .LastOrDefault()?.StateName;
         }
+        public static string Last(this ICollection<SessionState> sessionStates)
+        {
+            return sessionStates
+                .OrderBy(t => t.CreatedAt)
+                .LastOrDefault()?.StateName;
+        }
     }
 }

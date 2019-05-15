@@ -22,7 +22,7 @@ namespace Guanwu.Notify.Plugin.Persistence.Console
             PluginObject.OnMessageReceived += OnMessageReceived;
             PluginObject.OnEventRaising += OnEventRaising;
 
-            Logger.LogInformation($">>>> {Const.PLUGIN_NAME} <<<<");
+            Logger.LogInformation($">>>> {Const.PLUGIN_NAME}: {AppDomain.CurrentDomain.Id} <<<<");
         }
 
         private void OnEventRaising(object sender, PipelineEventEventArgs e)

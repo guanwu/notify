@@ -2,23 +2,28 @@
 using Guanwu.Notify.Views;
 using Guanwu.Notify.Widget;
 using Guanwu.Toolkit.Extensions;
-using Guanwu.Toolkit.Helpers;
+using Guanwu.Toolkit.Scheduling;
 using Guanwu.Toolkit.Utils;
 using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.Extensions.Logging;
 using System;
 using System.AddIn;
+using System.Collections;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace Guanwu.Notify.Plugin.Transformer.Xml
+namespace Guanwu.Notify.Plugin.StatusTracking
 {
     [AddIn(Const.PLUGIN_NAME)]
-    public sealed class TransServer : IPlugin
+    public sealed class TrackerServer : IPlugin
     {
         private IProfile Profile;
         private ILogger Logger;
         private string HangfireConn;
+
+        private readonly List<string> SchedulerJobs = new List<string>();
 
         public void Execute()
         {
@@ -41,6 +46,12 @@ namespace Guanwu.Notify.Plugin.Transformer.Xml
                 new BackgroundJobServer(new BackgroundJobServerOptions {
                     Queues = new[] { Const.PLUGIN_NAME },
                 });
+
+                var scheduler = new Scheduler { CronExpression = "*/5 * * * *" };
+                scheduler.OnTime += (s, e) => {
+                    BackgroundJob.Enqueue<ReportBuilder>(t => t.BuildReport("EXEC [sp_last_session]", "C:\\Saturn\\v4\\web_ui\\publish\\Data", "last_status.json"));
+                };
+                Task.Run(() => scheduler.Start());
             }
             catch (Exception ex) {
                 Logger.LogError(ex, ex.ToString());
@@ -53,11 +64,11 @@ namespace Guanwu.Notify.Plugin.Transformer.Xml
             Logger = AppDomain.CurrentDomain.GetData(WidgetConst.ILOGGER) as ILogger;
             HangfireConn = AppDomain.CurrentDomain.GetData(WidgetConst.HANGFIRE) as string;
 
-            pluginObject.OnMessagePersisted += OnMessagePersistedAsync;
+            pluginObject.OnMessagePersisted += OnMessagePersisted;
             Logger.LogInformation($">>>> {Const.PLUGIN_NAME}: {AppDomain.CurrentDomain.Id} <<<<");
         }
 
-        private void OnMessagePersistedAsync(object sender, PipelineMessageEventArgs e)
+        private void OnMessagePersisted(object sender, PipelineMessageEventArgs e)
         {
             if (e == null) return;
 
@@ -67,32 +78,30 @@ namespace Guanwu.Notify.Plugin.Transformer.Xml
         private void TryEnqueueJobs(PipelineMessage pMessage)
         {
             string sessionId = pMessage.Id;
-            string jobId = pMessage.Targets[WidgetConst.PMSGIDX_JOBID];
             string appId = pMessage.Targets[WidgetConst.PMSGIDX_APPID];
             string[] scopes = pMessage.Targets[WidgetConst.PMSGIDX_SCOPES].Split(';');
 
             void EnqueueJob(dynamic profile)
             {
-                string profileId = Generator.RandomLongId;
+                string profileJson = ((object)(profile.User)).ToJson();
                 string profileName = profile.System.ProfileName;
-                string profileJson = ((object)profile).ToJson();
+                string procedure = profile.System.Procedure;
+                string cronExpression = profile.System.CronExpression;
+                int maxAge = profile.System.MaxAge;
 
-                string paramJob = BackgroundJob.Enqueue<TransBuilder>(t => t.AddJobParam(
-                    jobId, profileId, "Profile", profileJson, profileName));
+                BackgroundJob.Enqueue<TrackerBuilder>(t => t.AddSessionState(
+                sessionId, nameof(SessionStates.Pending)));
 
-                string taskId = Generator.RandomLongId;
-                var taskJob = BackgroundJob.ContinueJobWith<TransBuilder>(paramJob, t => t.AddJobTask(
-                    jobId, taskId, profileName));
-
-                var stateJob = BackgroundJob.ContinueJobWith<TransBuilder>(taskJob, t => t.AddTaskState(
-                    taskId, nameof(TaskStates.Pending)));
-
-                string requestId = Generator.RandomLongId;
-                var requestJob = BackgroundJob.ContinueJobWith<TransBuilder>(taskJob, t => t.AddTaskRequest(
-                    taskId, requestId, jobId, profileId));
-
-                BackgroundJob.ContinueJobWith<TransBuilder>(requestJob, t => t.AddTaskResponse(
-                    taskId, requestId, sessionId));
+                string syncJob = $"{appId}.{profileName}";
+                if (!SchedulerJobs.Contains(syncJob)) {
+                    var scheduler = new Scheduler { CronExpression = cronExpression };
+                    scheduler.OnTime += (s, e) => {
+                        BackgroundJob.Enqueue<TrackerBuilder>(t => t.SyncSessionStates(procedure, profileJson));
+                    };
+                    SchedulerJobs.Add(syncJob);
+                    Task.Run(() => { scheduler.Start(); scheduler.Dispose(); });
+                    Task.Run(() => { SpinWait.SpinUntil(() => false, maxAge); scheduler.Abort(); SchedulerJobs.Remove(syncJob); });
+                }
             }
 
             try {

@@ -2,14 +2,10 @@
 using Guanwu.Notify.Widget;
 using Guanwu.Notify.Widget.Persistence;
 using Guanwu.Toolkit.Extensions;
-using Guanwu.Toolkit.Utils;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Threading.Tasks;
 
 namespace Guanwu.Notify.Plugin.Kjt.Ningbo
 {
@@ -95,6 +91,7 @@ namespace Guanwu.Notify.Plugin.Kjt.Ningbo
             string responseResult = response.Header.Result;
             string stateName = responseResult == "T" ?
                 nameof(TaskStates.Completed) : nameof(TaskStates.Failed);
+
             AddTaskState(taskId, stateName);
         }
     }

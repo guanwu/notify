@@ -4,10 +4,10 @@ using System.Collections.Generic;
 namespace Guanwu.Notify.Persistence.Models
 {
     [Serializable]
-    public partial class Job
+    public partial class SessionState
     {
-        public string JobId { get; set; }
-        public string Content { get; set; }
+        public string StateId { get; set; }
+        public string StateName { get; set; }
         public long CreatedAt { get; set; }
 
         public string SessionId { get; set; }
@@ -16,6 +16,6 @@ namespace Guanwu.Notify.Persistence.Models
 
     public partial class Session
     {
-        public virtual ICollection<Job> Jobs { get; set; }
+        public virtual ICollection<SessionState> States { get; set; }
     }
 }

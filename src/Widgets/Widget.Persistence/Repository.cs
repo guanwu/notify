@@ -12,13 +12,37 @@ namespace Guanwu.Notify.Widget.Persistence
         public string WidgetName => Const.WIDGET_NAME;
         private IDbContext DbContext => AppDomain.CurrentDomain.GetData(WidgetConst.IDBCONTEXT) as IDbContext;
 
+        public void AddSession(string sessionId, string appId, long? createdAt)
+        {
+            var session = new Session {
+                SessionId = sessionId ?? Generator.RandomLongId,
+                AppId = appId,
+                CreatedAt = createdAt ?? Generator.Timestamp,
+            };
+            bool isExisted = DbContext.QueryEntities<Session>()
+                .Any(t => t.SessionId == sessionId);
+            if (!isExisted)
+                DbContext?.InsertEntities(session);
+        }
+
+        public void AddSessionState(string sessionId, string stateId, string stateName, long? createdAt)
+        {
+            var state = new SessionState {
+                CreatedAt = createdAt ?? Generator.Timestamp,
+                StateId = stateId ?? Generator.RandomLongId,
+                StateName = stateName,
+                SessionId = sessionId,
+            };
+            DbContext?.InsertEntities(state);
+        }
+
         public void AddJob(string sessionId, string jobId, string content, long? createdAt)
         {
             var job = new Job {
                 Content = content,
                 CreatedAt = createdAt ?? Generator.Timestamp,
                 JobId = jobId ?? Generator.RandomLongId,
-                SessionId = sessionId ?? Generator.RandomLongId,
+                SessionId = sessionId,
             };
             DbContext?.InsertEntities(job);
         }

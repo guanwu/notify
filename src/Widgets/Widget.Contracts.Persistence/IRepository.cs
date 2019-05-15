@@ -8,6 +8,17 @@ namespace Guanwu.Notify.Widget.Persistence
         List<TElement> FromSql<TElement>(string sql, params object[] parameters);
         IQueryable<TEntity> QueryEntities<TEntity>() where TEntity : class;
 
+        void AddSession(
+            string sessionId,
+            string appId,
+            long? createdAt);
+
+        void AddSessionState(
+            string sessionId,
+            string stateId,
+            string stateName,
+            long? createdAt);
+
         void AddJob(
             string sessionId, 
             string jobId, 

@@ -27,17 +27,20 @@ namespace Guanwu.Notify.Plugin.Report
                     QueuePollInterval = TimeSpan.Zero,
                     UseRecommendedIsolationLevel = true,
                     UsePageLocksOnDequeue = true,
-                    DisableGlobalLocks = true
+                    DisableGlobalLocks = true,
                 });
                 new BackgroundJobServer(new BackgroundJobServerOptions {
-                    Queues = new[] { Const.PLUGIN_NAME }
+                    ServerName = $"{Environment.MachineName}.{Const.PLUGIN_NAME}",
+                    Queues = new[] { Const.PLUGIN_NAME },
                 });
             }
             catch (Exception ex) {
                 Logger.LogError(ex, ex.ToString());
             }
 
-            //RecurringJob.AddOrUpdate<ReportBuilder>(t => t.BuildReport("exec [Notify].[Notify].[sp_last_status];", "Output\\Kjt.Reports", "last_status.json"), Cron.Minutely);
+            RecurringJob.AddOrUpdate<ReportBuilder>("report.last_session", t => t.BuildReport(
+                "EXEC [sp_last_session];", "Output\\Kjt.Reports", "last_status.json"), 
+                Cron.Minutely, timeZone: TimeZoneInfo.Local, queue: Const.PLUGIN_NAME);
         }
 
         public void Initialize(IPluginObject pluginObject)
@@ -45,7 +48,7 @@ namespace Guanwu.Notify.Plugin.Report
             Logger = AppDomain.CurrentDomain.GetData(WidgetConst.ILOGGER) as ILogger;
             HangfireConn = AppDomain.CurrentDomain.GetData(WidgetConst.HANGFIRE) as string;
 
-            Logger.LogInformation($">>>> {Const.PLUGIN_NAME} <<<<");
+            Logger.LogInformation($">>>> {Const.PLUGIN_NAME}: {AppDomain.CurrentDomain.Id} <<<<");
         }
     }
 }

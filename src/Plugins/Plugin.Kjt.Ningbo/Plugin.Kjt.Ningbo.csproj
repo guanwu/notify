@@ -31,8 +31,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Guanwu.Toolkit, Version=1.2.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Guanwu.Toolkit.1.2.2\lib\netstandard2.0\Guanwu.Toolkit.dll</HintPath>
+    <Reference Include="Guanwu.Toolkit, Version=1.2.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\Guanwu.Toolkit.1.2.3\lib\netstandard2.0\Guanwu.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="Guanwu.Toolkit.Serialization, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\Guanwu.Toolkit.Serialization.1.0.1\lib\netstandard2.0\Guanwu.Toolkit.Serialization.dll</HintPath>

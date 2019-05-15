@@ -2,7 +2,6 @@
 using Guanwu.Notify.Widget;
 using Guanwu.Notify.Widget.Persistence;
 using Guanwu.Toolkit.Extensions;
-using Guanwu.Toolkit.Helpers;
 using Guanwu.Toolkit.Utils;
 using Microsoft.Extensions.Logging;
 using System;
@@ -29,7 +28,7 @@ namespace Guanwu.Notify.Plugin.Persistence.Database
             PluginObject = pluginObject;
             PluginObject.OnMessageReceived += OnMessageReceived;
 
-            Logger.LogInformation($">>>> {PluginName} <<<<");
+            Logger.LogInformation($">>>> {PluginName}: {AppDomain.CurrentDomain.Id} <<<<");
         }
 
         private void OnMessageReceived(object sender, PipelineMessageEventArgs e)
@@ -71,13 +70,12 @@ namespace Guanwu.Notify.Plugin.Persistence.Database
             Guard.AgainstNullAndEmpty(nameof(pMessage.Content), pMessage.Content);
             Guard.AgainstNull(nameof(pMessage.Targets), pMessage.Targets);
 
-            try {
-                string jobId = pMessage.Targets[WidgetConst.PMSGIDX_JOBID];
-                Repository.AddJob(pMessage.Id, jobId, pMessage.Content, null);
-            }
-            catch (Exception ex) {
-                Logger.LogCritical(ex, ex.ToString());
-            }
+            string sessionId = pMessage.Id;
+            string appId = pMessage.Targets[WidgetConst.PMSGIDX_APPID];
+            string jobId = pMessage.Targets[WidgetConst.PMSGIDX_JOBID];
+
+            Repository.AddSession(sessionId, appId, null);
+            Repository.AddJob(sessionId, jobId, pMessage.Content, null);
         }
     }
 }

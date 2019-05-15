@@ -1,13 +1,16 @@
 ﻿using Guanwu.Notify.Widget;
 using Guanwu.Notify.Widget.Persistence;
+using Guanwu.Toolkit.Extensions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace Guanwu.Notify.Plugin.Report
+namespace Guanwu.Notify.Plugin.StatusTracking
 {
     public class ReportBuilder
     {
@@ -47,12 +50,18 @@ namespace Guanwu.Notify.Plugin.Report
 
         private void WriteReport(ReportInfo report, string directory, string name)
         {
-            string outDir = Path.Combine(directory, report.AppId);
-            outDir = Path.GetFullPath(outDir);
-            Directory.CreateDirectory(outDir);
+            string dir = Path.Combine(directory, report.AppId);
+            dir = Path.GetFullPath(dir);
+            Directory.CreateDirectory(dir);
 
-            string outPath = Path.Combine(outDir, name);
-            File.WriteAllText(outPath, report.Report);
+            string path = Path.Combine(dir, name);
+
+            while (File.Exists(path) && path.IsLocked()) {
+                Logger.LogWarning($"File({path}) is in use, wait 5 seconds and try again.");
+                SpinWait.SpinUntil(() => false, 5000);
+            }
+
+            File.WriteAllText(path, report.Report, new UTF8Encoding(false));
         }
     }
 }

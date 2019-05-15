@@ -7,6 +7,7 @@ using System;
 using System.AddIn;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -43,7 +44,7 @@ namespace Guanwu.Notify.Plugin.Transport.Folder
             Profile = AppDomain.CurrentDomain.GetData(WidgetConst.IPROFILE) as IProfile;
             Logger = AppDomain.CurrentDomain.GetData(WidgetConst.ILOGGER) as ILogger;
 
-            Logger.LogInformation($">>>> {Const.PLUGIN_NAME} <<<<");
+            Logger.LogInformation($">>>> {Const.PLUGIN_NAME}: {AppDomain.CurrentDomain.Id} <<<<");
         }
 
         private void OnFileCreated(object sender, FileWatcherInfo e)
@@ -78,11 +79,11 @@ namespace Guanwu.Notify.Plugin.Transport.Folder
                 string path = Path.Combine(directory, jobId + ".json");
 
                 while (File.Exists(path)) {
-                    SpinWait.SpinUntil(() => false, 1000);
-                    Logger.LogWarning("File already exists, wait 1 second and try again.");
+                    Logger.LogWarning("File already exists, wait 5 seconds and try again.");
+                    SpinWait.SpinUntil(() => false, 5000);
                 }
 
-                File.WriteAllText(path, jobMessage);
+                File.WriteAllText(path, jobMessage, new UTF8Encoding(false));
             }
 
             try {
