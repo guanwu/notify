@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 
-namespace Guanwu.Notify.Plugin.Kjt.Ningbo
+namespace Guanwu.Notify.Plugin.Kjt.Hefei
 {
     public class PostBuilder
     {
@@ -47,21 +47,25 @@ namespace Guanwu.Notify.Plugin.Kjt.Ningbo
             dynamic profile = profileParam.Value.FromJson<dynamic>();
             string userId = profile.User.UserId;
             string userToken = profile.User.Token;
+            string dxpId = profile.User.DxpId;
             string msgType = profile.System.MsgType;
             string declType = profile.System.DeclType;
-            string guid = Guid.NewGuid().ToString();
+            string copMsgId = Guid.NewGuid().ToString();
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            string xmlStr = job.Content.FromJson<dynamic>().data;
-            string sign = $"{userId}{userToken}{timestamp}".ToMd5();
-
+            string msg = job.Content.FromJson<dynamic>().data;
+            string sign = $"copMsgId={copMsgId}&decltype={declType}" +
+                $"&dxpId={dxpId}&msg={msg}&msgtype={msgType}&timestamp={timestamp}" +
+                $"&userid={userId}&key={userToken}".ToMd5();
+            
             var taskRequest = new Dictionary<string, string> {
                 { "userid", userId },
                 { "timestamp", timestamp },
                 { "sign", sign },
-                { "msgtype", msgType },
-                { "xmlstr", xmlStr },
-                { "guid", guid },
                 { "decltype", declType },
+                { "msg", msg },
+                { "msgtype", msgType },
+                { "dxpId", dxpId },
+                { "copMsgId", copMsgId },
             };
             string requestJson = taskRequest.ToJson();
 
