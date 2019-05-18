@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 
-namespace Guanwu.Notify.Plugin.Kjt.Ningbo
+namespace Guanwu.Notify.Plugin.Kjt.Alipay
 {
     public class PostBuilder
     {
@@ -45,27 +45,22 @@ namespace Guanwu.Notify.Plugin.Kjt.Ningbo
                 .Single(t => t.ParamId == profileId);
 
             dynamic profile = profileParam.Value.FromJson<dynamic>();
-            string userId = profile.User.UserId;
-            string userToken = profile.User.Token;
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            string sign = $"{userId}{userToken}{timestamp}".ToMd5();
-            string msgType = profile.System.MsgType;
-            string xmlStr = job.Content.FromJson<dynamic>().data;
-            string guid = Guid.NewGuid().ToString();
-            string declType = profile.System.DeclType;
+            string signKey = profile.User.SignKey;
+            string requestData = job.Content.FromJson<dynamic>().data;
+            string requestXml = requestData.FromBase64();
 
-            var taskRequest = new Dictionary<string, string> {
-                { "userid", userId },
-                { "timestamp", timestamp },
-                { "sign", sign },
-                { "msgtype", msgType },
-                { "xmlstr", xmlStr },
-                { "guid", guid },
-                { "decltype", declType },
-            };
-            string requestJson = taskRequest.ToJson();
+            var requestItems = requestXml
+                .FromXml<SortedDictionary<string, string>>();
+            var signKeys = requestItems.Single(t => t.Key == "@signKeys").Value.Split(';');
+            var signItems = requestItems
+                .Where(t => !string.IsNullOrEmpty(t.Value))
+                .Where(t => signKeys.Contains(t.Key));
 
-            Repository.AddTaskRequest(taskId, requestId, requestJson, null);
+            string requestText = string.Join("&", signItems.Select(t => $"{t.Key}={t.Value}"));
+            string requestSign = $"{requestText}{signKey}".ToMd5().ToLower();
+            string requestPath = $"{requestText}&sign={requestSign}&sign_type=MD5";
+
+            Repository.AddTaskRequest(taskId, requestId, requestPath, null);
             AddTaskState(taskId, nameof(TaskStates.Processing));
         }
 
@@ -75,12 +70,11 @@ namespace Guanwu.Notify.Plugin.Kjt.Ningbo
             TaskRequest taskRequest = Repository.QueryEntities<TaskRequest>()
                 .Single(t => t.RequestId == requestId);
 
-            string requestJson = taskRequest.Content.FromBase64();
-            var requestForms = requestJson.FromJson<Dictionary<string, string>>();
+            string requestPath = taskRequest.Content.FromBase64();
+            string requestUrl = $"{requestHost}?{requestPath}";
             string responseXml = "";
             using (var httpClient = new HttpClient()) {
-                var httpContent = new FormUrlEncodedContent(requestForms);
-                var httpResponse = httpClient.PostAsync(requestHost, httpContent).Result;
+                var httpResponse = httpClient.GetAsync(requestUrl).Result;
                 httpResponse.EnsureSuccessStatusCode();
                 string responseString = httpResponse.Content.ReadAsStringAsync().Result;
                 responseXml = Uri.UnescapeDataString(responseString);
@@ -88,11 +82,9 @@ namespace Guanwu.Notify.Plugin.Kjt.Ningbo
             Repository.AddTaskResponse(requestId, responseXml, null);
 
             dynamic response = responseXml.FromXml<dynamic>();
-            string responseResult = response.Header.Result;
-            string responseMessage = response.Header.ResultMsg;
-            string stateName = (responseResult == "T" || responseMessage == "REPEATED_CALL_ERROR!") ?
+            string stateName = (response.is_success == "T"
+                && (response.response.alipay.result_code == "SUCCESS" || response.response.alipay.detail_error_code == "SAME_CUSTOMS_DECLARE_ONCE")) ?
                 nameof(TaskStates.Completed) : nameof(TaskStates.Failed);
-
             AddTaskState(taskId, stateName);
         }
     }

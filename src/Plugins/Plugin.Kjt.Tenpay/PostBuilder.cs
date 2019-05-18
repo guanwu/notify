@@ -6,8 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 
-namespace Guanwu.Notify.Plugin.Kjt.Ningbo
+namespace Guanwu.Notify.Plugin.Kjt.Tenpay
 {
     public class PostBuilder
     {
@@ -45,27 +46,24 @@ namespace Guanwu.Notify.Plugin.Kjt.Ningbo
                 .Single(t => t.ParamId == profileId);
 
             dynamic profile = profileParam.Value.FromJson<dynamic>();
-            string userId = profile.User.UserId;
-            string userToken = profile.User.Token;
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            string sign = $"{userId}{userToken}{timestamp}".ToMd5();
-            string msgType = profile.System.MsgType;
-            string xmlStr = job.Content.FromJson<dynamic>().data;
-            string guid = Guid.NewGuid().ToString();
-            string declType = profile.System.DeclType;
+            string signKey = profile.User.SignKey;
+            string requestData = job.Content.FromJson<dynamic>().data;
+            string requestXml = requestData.FromBase64();
 
-            var taskRequest = new Dictionary<string, string> {
-                { "userid", userId },
-                { "timestamp", timestamp },
-                { "sign", sign },
-                { "msgtype", msgType },
-                { "xmlstr", xmlStr },
-                { "guid", guid },
-                { "decltype", declType },
-            };
-            string requestJson = taskRequest.ToJson();
+            var requestItems = requestXml
+                .FromXml<SortedDictionary<string, string>>();
+            var signKeys = requestItems.Single(t => t.Key == "@signKeys").Value.Split(';');
+            var signItems = requestItems
+                .Where(t => !string.IsNullOrEmpty(t.Value))
+                .Where(t => signKeys.Contains(t.Key));
 
-            Repository.AddTaskRequest(taskId, requestId, requestJson, null);
+            string requestText = string.Join("&", signItems.Select(t => $"{t.Key}={t.Value}"));
+            string requestSign = $"{requestText}&key={signKey}".ToMd5().ToUpper();
+
+            requestItems.Add("sign", requestSign);
+            string requestContent = requestItems.ToXml();
+
+            Repository.AddTaskRequest(taskId, requestId, requestContent, null);
             AddTaskState(taskId, nameof(TaskStates.Processing));
         }
 
@@ -75,11 +73,10 @@ namespace Guanwu.Notify.Plugin.Kjt.Ningbo
             TaskRequest taskRequest = Repository.QueryEntities<TaskRequest>()
                 .Single(t => t.RequestId == requestId);
 
-            string requestJson = taskRequest.Content.FromBase64();
-            var requestForms = requestJson.FromJson<Dictionary<string, string>>();
+            string requestXml = taskRequest.Content.FromBase64();
             string responseXml = "";
             using (var httpClient = new HttpClient()) {
-                var httpContent = new FormUrlEncodedContent(requestForms);
+                var httpContent = new StringContent(requestXml, Encoding.UTF8, "application/xml");
                 var httpResponse = httpClient.PostAsync(requestHost, httpContent).Result;
                 httpResponse.EnsureSuccessStatusCode();
                 string responseString = httpResponse.Content.ReadAsStringAsync().Result;
@@ -88,11 +85,8 @@ namespace Guanwu.Notify.Plugin.Kjt.Ningbo
             Repository.AddTaskResponse(requestId, responseXml, null);
 
             dynamic response = responseXml.FromXml<dynamic>();
-            string responseResult = response.Header.Result;
-            string responseMessage = response.Header.ResultMsg;
-            string stateName = (responseResult == "T" || responseMessage == "REPEATED_CALL_ERROR!") ?
+            string stateName = (response.return_code == "SUCCESS" && response.result_code == "SUCCESS") ?
                 nameof(TaskStates.Completed) : nameof(TaskStates.Failed);
-
             AddTaskState(taskId, stateName);
         }
     }

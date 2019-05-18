@@ -35,3 +35,6 @@
 /src/Plugins/Plugin.Kjt.Ningbo/obj
 /src/Plugins/Plugin.Transport.Folder/obj
 /src/Plugins/Plugin.StatusTracking/obj
+/src/Plugins/Plugin.Kjt.Alipay/obj
+/src/Plugins/Plugin.Kjt.Tenpay/obj
+/src/Plugins/Plugin.Kjt.Hefei/obj

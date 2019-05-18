@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Plugin.Report")]
+[assembly: AssemblyTitle("Plugin.Kjt.Hefei")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Plugin.Report")]
+[assembly: AssemblyProduct("Plugin.Kjt.Hefei")]
 [assembly: AssemblyCopyright("Copyright ©  2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("052e60ff-0272-44eb-b5ee-0ba625301b96")]
+[assembly: Guid("39022ada-03af-4efe-9dfa-527f807a6e7b")]
 
 // Version information for an assembly consists of the following four values:
 //

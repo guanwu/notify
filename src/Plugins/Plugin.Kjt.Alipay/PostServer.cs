@@ -11,7 +11,7 @@ using System;
 using System.AddIn;
 using System.Threading.Tasks;
 
-namespace Guanwu.Notify.Plugin.Kjt.Ningbo
+namespace Guanwu.Notify.Plugin.Kjt.Alipay
 {
     [AddIn(Const.PLUGIN_NAME)]
     public sealed class PostServer : IPlugin
