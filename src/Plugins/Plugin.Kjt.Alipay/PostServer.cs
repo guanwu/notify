@@ -54,7 +54,7 @@ namespace Guanwu.Notify.Plugin.Kjt.Alipay
             HangfireConn = AppDomain.CurrentDomain.GetData(WidgetConst.HANGFIRE) as string;
 
             pluginObject.OnMessagePersisted += OnMessagePersisted;
-            Logger.LogInformation($">>>> {Const.PLUGIN_NAME}: {AppDomain.CurrentDomain.Id} <<<<");
+            //Logger.LogInformation($">>>> {Const.PLUGIN_NAME}: {AppDomain.CurrentDomain.Id} <<<<");
         }
 
         private void OnMessagePersisted(object sender, PipelineMessageEventArgs e)
@@ -103,6 +103,9 @@ namespace Guanwu.Notify.Plugin.Kjt.Alipay
             catch (AggregateException e) {
                 foreach (var ie in e.InnerExceptions)
                     Logger.LogError(ie, ie.ToString());
+            }
+            catch (Exception e) {
+                Logger.LogError(e, e.ToString());
             }
         }
     }

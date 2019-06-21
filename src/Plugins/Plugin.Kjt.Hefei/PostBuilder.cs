@@ -53,9 +53,9 @@ namespace Guanwu.Notify.Plugin.Kjt.Hefei
             string copMsgId = Guid.NewGuid().ToString();
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             string msg = job.Content.FromJson<dynamic>().data;
-            string sign = $"copMsgId={copMsgId}&decltype={declType}" +
+            string sign = ($"copMsgId={copMsgId}&decltype={declType}" +
                 $"&dxpId={dxpId}&msg={msg}&msgtype={msgType}&timestamp={timestamp}" +
-                $"&userid={userId}&key={userToken}".ToMd5();
+                $"&userid={userId}&key={userToken}").ToMd5();
             
             var taskRequest = new Dictionary<string, string> {
                 { "userid", userId },

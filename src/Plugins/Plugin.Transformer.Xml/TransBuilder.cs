@@ -64,10 +64,8 @@ namespace Guanwu.Notify.Plugin.Transformer.Xml
             string requestXml = request.Content.FromBase64();
             dynamic taskRequest = requestXml.FromXml<dynamic>();
             dynamic profile = taskRequest.Profile.System;
-
             string stylesheet = profile.Stylesheet;
             string responseXml = requestXml.Transform(stylesheet);
-
             string directory = profile.Directory;
             string datePattern = profile.DatePattern;
             Task.Run(() => TryWriteFile(directory, sessionId, responseXml));
@@ -81,12 +79,10 @@ namespace Guanwu.Notify.Plugin.Transformer.Xml
             try {
                 Directory.CreateDirectory(directory);
                 string path = Path.Combine(directory, $"{name}.xml");
-
-                while (File.Exists(path) && path.IsLocked()) {
+                while (File.Exists(path) && path.IsFileLocked()) {
                     Logger.LogWarning($"File({path}) is in use, wait 5 seconds and try again.");
                     SpinWait.SpinUntil(() => false, 5000);
                 }
-
                 File.WriteAllText(path, content, new UTF8Encoding(false));
             }
             catch (Exception ex) {

@@ -32,10 +32,11 @@ namespace Guanwu.Notify.Plugin.Transport.Folder
                     Directory = Const.TRANSPORT_DIR
                 };
                 FileWatcher.OnFileCreated += OnFileCreated;
+                FileWatcher.OnException += (s, e) => Logger.LogError(e, e.ToString());
                 Task.Run(() => FileWatcher.Start());
             }
-            catch (Exception ex) {
-                Logger.LogError(ex, ex.ToString());
+            catch (Exception e) {
+                Logger.LogError(e, e.ToString());
             }
         }
 
@@ -43,8 +44,7 @@ namespace Guanwu.Notify.Plugin.Transport.Folder
         {
             Profile = AppDomain.CurrentDomain.GetData(WidgetConst.IPROFILE) as IProfile;
             Logger = AppDomain.CurrentDomain.GetData(WidgetConst.ILOGGER) as ILogger;
-
-            Logger.LogInformation($">>>> {Const.PLUGIN_NAME}: {AppDomain.CurrentDomain.Id} <<<<");
+            //Logger.LogInformation($">>>> {Const.PLUGIN_NAME}: {AppDomain.CurrentDomain.Id} <<<<");
         }
 
         private void OnFileCreated(object sender, FileWatcherInfo e)
@@ -64,23 +64,18 @@ namespace Guanwu.Notify.Plugin.Transport.Folder
                 string directory = profile.System.Directory;
                 string scopes = profile.System.Scopes;
 
-                string jobMessage =
-                    "{\"auth\":{\"app_id\":\"" +
-                    appId +
-                    "\"},\"meta\":{\"id\":\"" +
-                    jobId +
-                    "\",\"scopes\":\"" +
-                    scopes +
-                    "\"},\"data\":\"" +
-                    data
-                    + "\"}";
+                string jobMessage = "{\"auth\":{\"app_id\":\"" +
+                    appId + "\"},\"meta\":{\"id\":\"" +
+                    jobId + "\",\"scopes\":\"" +
+                    scopes + "\"},\"data\":\"" +
+                    data + "\"}";
 
                 string messageDir = profile.System.Directory;
                 string path = Path.Combine(directory, jobId + ".json");
 
                 while (File.Exists(path)) {
-                    Logger.LogWarning("File already exists, wait 5 seconds and try again.");
-                    SpinWait.SpinUntil(() => false, 5000);
+                    Logger.LogWarning("File already exists, wait 1 second and try again.");
+                    SpinWait.SpinUntil(() => false, 1000);
                 }
 
                 File.WriteAllText(path, jobMessage, new UTF8Encoding(false));
@@ -105,8 +100,8 @@ namespace Guanwu.Notify.Plugin.Transport.Folder
                 foreach (var ie in e.InnerExceptions)
                     Logger.LogError(ie, ie.ToString());
             }
-            catch (Exception ex) {
-                Logger.LogError(ex, ex.ToString());
+            catch (Exception e) {
+                Logger.LogError(e, e.ToString());
             }
         }
 
@@ -115,8 +110,8 @@ namespace Guanwu.Notify.Plugin.Transport.Folder
             try {
                 File.Delete(info.FullName);
             }
-            catch (Exception ex) {
-                Logger.LogError(ex, ex.ToString());
+            catch (Exception e) {
+                Logger.LogError(e, e.ToString());
             }
         }
 

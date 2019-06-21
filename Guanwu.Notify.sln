@@ -63,6 +63,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plugin.Kjt.Tenpay", "src\Pl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plugin.Kjt.Chengdu", "src\Plugins\Plugin.Kjt.Chengdu\Plugin.Kjt.Chengdu.csproj", "{624C7456-10D7-4AC0-8435-2143562254D0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plugin.Kjt.Henan", "src\Plugins\Plugin.Kjt.Henan\Plugin.Kjt.Henan.csproj", "{502B4967-B463-48BE-B67F-595BD425C15B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -149,6 +151,10 @@ Global
 		{624C7456-10D7-4AC0-8435-2143562254D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{624C7456-10D7-4AC0-8435-2143562254D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{624C7456-10D7-4AC0-8435-2143562254D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{502B4967-B463-48BE-B67F-595BD425C15B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{502B4967-B463-48BE-B67F-595BD425C15B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{502B4967-B463-48BE-B67F-595BD425C15B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{502B4967-B463-48BE-B67F-595BD425C15B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -179,6 +185,7 @@ Global
 		{39022ADA-03AF-4EFE-9DFA-527F807A6E7B} = {98564834-F548-4232-8F3D-2A1F3B5F2CAE}
 		{FDFA35DC-FBCB-413D-BCE6-9EE38A44FBC0} = {98564834-F548-4232-8F3D-2A1F3B5F2CAE}
 		{624C7456-10D7-4AC0-8435-2143562254D0} = {98564834-F548-4232-8F3D-2A1F3B5F2CAE}
+		{502B4967-B463-48BE-B67F-595BD425C15B} = {98564834-F548-4232-8F3D-2A1F3B5F2CAE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9C1AB00B-3667-448C-AD0F-D0F1BED47EBC}

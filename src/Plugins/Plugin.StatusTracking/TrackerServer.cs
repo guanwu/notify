@@ -47,7 +47,7 @@ namespace Guanwu.Notify.Plugin.StatusTracking
                     Queues = new[] { Const.PLUGIN_NAME },
                 });
 
-                var scheduler = new Scheduler { CronExpression = "*/5 * * * *" };
+                var scheduler = new Scheduler { CronExpression = "*/2 * * * *" };
                 scheduler.OnTime += (s, e) => {
                     BackgroundJob.Enqueue<ReportBuilder>(t => t.BuildReport("EXEC [sp_last_session]", "C:\\Saturn\\v4\\web_ui\\publish\\Data", "last_status.json"));
                 };
@@ -65,7 +65,7 @@ namespace Guanwu.Notify.Plugin.StatusTracking
             HangfireConn = AppDomain.CurrentDomain.GetData(WidgetConst.HANGFIRE) as string;
 
             pluginObject.OnMessagePersisted += OnMessagePersisted;
-            Logger.LogInformation($">>>> {Const.PLUGIN_NAME}: {AppDomain.CurrentDomain.Id} <<<<");
+            //Logger.LogInformation($">>>> {Const.PLUGIN_NAME}: {AppDomain.CurrentDomain.Id} <<<<");
         }
 
         private void OnMessagePersisted(object sender, PipelineMessageEventArgs e)
@@ -113,6 +113,9 @@ namespace Guanwu.Notify.Plugin.StatusTracking
             catch (AggregateException e) {
                 foreach (var ie in e.InnerExceptions)
                     Logger.LogError(ie, ie.ToString());
+            }
+            catch (Exception e) {
+                Logger.LogError(e, e.ToString());
             }
         }
     }

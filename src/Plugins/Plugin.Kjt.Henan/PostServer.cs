@@ -1,7 +1,6 @@
 ﻿using Guanwu.Notify.Persistence.Models;
 using Guanwu.Notify.Views;
 using Guanwu.Notify.Widget;
-using Guanwu.Toolkit.Extensions;
 using Guanwu.Toolkit.Helpers;
 using Guanwu.Toolkit.Utils;
 using Hangfire;
@@ -11,7 +10,7 @@ using System;
 using System.AddIn;
 using System.Threading.Tasks;
 
-namespace Guanwu.Notify.Plugin.Kjt.Ningbo
+namespace Guanwu.Notify.Plugin.Kjt.Henan
 {
     [AddIn(Const.PLUGIN_NAME)]
     public sealed class PostServer : IPlugin
@@ -72,15 +71,11 @@ namespace Guanwu.Notify.Plugin.Kjt.Ningbo
 
             void EnqueueJob(dynamic profile)
             {
-                string profileId = Generator.RandomLongId;
                 string profileName = profile.System.ProfileName;
                 string requestHost = profile.System.RequestHost;
-                string profileJson = ((object)profile).ToJson();
-                string paramJob = BackgroundJob.Enqueue<PostBuilder>(t => t.AddJobParam(
-                    jobId, profileId, "Profile", profileJson, profileName));
 
                 string taskId = Generator.RandomLongId;
-                var taskJob = BackgroundJob.ContinueJobWith<PostBuilder>(paramJob, t => t.AddJobTask(
+                var taskJob = BackgroundJob.Enqueue<PostBuilder>(t => t.AddJobTask(
                     jobId, taskId, profileName));
 
                 var stateJob = BackgroundJob.ContinueJobWith<PostBuilder>(taskJob, t => t.AddTaskState(
@@ -88,7 +83,7 @@ namespace Guanwu.Notify.Plugin.Kjt.Ningbo
 
                 string requestId = Generator.RandomLongId;
                 var requestJob = BackgroundJob.ContinueJobWith<PostBuilder>(taskJob, t => t.AddTaskRequest(
-                    taskId, requestId, jobId, profileId));
+                    taskId, requestId, jobId));
 
                 BackgroundJob.ContinueJobWith<PostBuilder>(requestJob, t => t.AddTaskResponse(
                     taskId, requestId, requestHost));
@@ -104,7 +99,7 @@ namespace Guanwu.Notify.Plugin.Kjt.Ningbo
                 foreach (var ie in e.InnerExceptions)
                     Logger.LogError(ie, ie.ToString());
             }
-            catch (Exception e) {
+            catch(Exception e) {
                 Logger.LogError(e, e.ToString());
             }
         }

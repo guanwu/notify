@@ -28,7 +28,7 @@ namespace Guanwu.Notify.Plugin.Persistence.Database
             PluginObject = pluginObject;
             PluginObject.OnMessageReceived += OnMessageReceived;
 
-            Logger.LogInformation($">>>> {PluginName}: {AppDomain.CurrentDomain.Id} <<<<");
+            //Logger.LogInformation($">>>> {PluginName}: {AppDomain.CurrentDomain.Id} <<<<");
         }
 
         private void OnMessageReceived(object sender, PipelineMessageEventArgs e)

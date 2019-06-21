@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 
-namespace Guanwu.Notify.Plugin.Kjt.Chengdu
+namespace Guanwu.Notify.Plugin.Kjt.Henan
 {
     public class PostBuilder
     {
@@ -43,10 +43,46 @@ namespace Guanwu.Notify.Plugin.Kjt.Chengdu
                 .Single(t => t.JobId == jobId);
 
             string data = job.Content.FromJson<dynamic>().data;
-            string xml = data.FromBase64();
+            string xmlMsg = data.FromBase64();
+
+            dynamic entity = xmlMsg.FromXml<dynamic>();
+            dynamic payment = entity["ceb:Payment"];
+            dynamic paymentHead = payment["ceb:PaymentHead"];
+            string ebpCode = paymentHead["ceb:ebpCode"];
+            string guid = paymentHead["ceb:guid"];
+            string orderNo = paymentHead["ceb:orderNo"];
+            string payerIdNumber = paymentHead["ceb:payerIdNumber"];
+            string amountPaid = paymentHead["ceb:amountPaid"];
+            string payCode = paymentHead["ceb:payCode"];
+            string payName = paymentHead["ceb:payName"];
+            string payTime = paymentHead["ceb:payTime"];
+            string payTransactionId = paymentHead["ceb:payTransactionId"];
+            string payerName = paymentHead["ceb:payerName"];
+            string payTimeStr = payTime.Insert(12, ":").Insert(10, ":")
+                .Insert(8, " ").Insert(6, "-").Insert(4, "-");
 
             var taskRequest = new Dictionary<string, string> {
-                { "xml", xml },
+                { "_input_charset", "utf-8" },
+                { "eCommerceCode", ebpCode },
+                { "freight", "0" },
+                { "notify_id", guid },
+                { "notify_time", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") },
+                { "notify_type", "forex_customs_info" },
+                { "orderNo", orderNo },
+                { "payAccount", payerIdNumber },
+                { "payAmount", amountPaid },
+                { "payAmountCurr", "142" },
+                { "payEnterpriseCode", payCode },
+                { "payEnterpriseName", payName },
+                { "payGoodsAmount", "0" },
+                { "payMerchantCode", ebpCode },
+                { "payTaxAmount", "0" },
+                { "payTimeStr", payTimeStr },
+                { "payTransactionNo", payTransactionId },
+                { "payerCertNo", payerIdNumber },
+                { "payerCertType", "1" },
+                { "payerName", payerName },
+                { "xmlMsg", xmlMsg }
             };
             string requestJson = taskRequest.ToJson();
 
@@ -62,20 +98,16 @@ namespace Guanwu.Notify.Plugin.Kjt.Chengdu
 
             string requestJson = taskRequest.Content.FromBase64();
             var requestForms = requestJson.FromJson<Dictionary<string, string>>();
-            string responseXml = "";
+            string responseText = "";
             using (var httpClient = new HttpClient()) {
                 var httpContent = new FormUrlEncodedContent(requestForms);
                 var httpResponse = httpClient.PostAsync(requestHost, httpContent).Result;
                 httpResponse.EnsureSuccessStatusCode();
-                string responseString = httpResponse.Content.ReadAsStringAsync().Result;
-                responseXml = Uri.UnescapeDataString(responseString);
+                responseText = httpResponse.Content.ReadAsStringAsync().Result;
             }
-            Repository.AddTaskResponse(requestId, responseXml, null);
+            Repository.AddTaskResponse(requestId, responseText, null);
 
-            dynamic response = responseXml.FromXml<dynamic>();
-            string responseResult = response.PaymentReturn.returnStatus;
-            string stateName = (responseResult == "1003" || responseResult == "1006" || responseResult == "1"
-                || responseResult == "2" || responseResult == "3" || responseResult == "5" || responseResult == "120") ?
+            string stateName = responseText == "success" ?
                 nameof(TaskStates.Completed) : nameof(TaskStates.Failed);
             AddTaskState(taskId, stateName);
         }

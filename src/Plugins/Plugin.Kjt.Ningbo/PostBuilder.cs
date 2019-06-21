@@ -63,9 +63,9 @@ namespace Guanwu.Notify.Plugin.Kjt.Ningbo
                 { "guid", guid },
                 { "decltype", declType },
             };
-            string requestJson = taskRequest.ToJson();
+            string taskContent = taskRequest.ToJson();
 
-            Repository.AddTaskRequest(taskId, requestId, requestJson, null);
+            Repository.AddTaskRequest(taskId, requestId, taskContent, null);
             AddTaskState(taskId, nameof(TaskStates.Processing));
         }
 

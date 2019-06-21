@@ -23,8 +23,8 @@ namespace Guanwu.Notify.Widget.FileSystemMessenger
 
         public void Initialize(ILogger logger = default)
         {
-            Logger = logger ?? NullLogger.Instance;
-            Logger.LogInformation($"++++ {WidgetName} ++++");
+            //Logger = logger ?? NullLogger.Instance;
+            //Logger.LogInformation($"++++ {WidgetName} ++++");
 
             try {
                 Directory.CreateDirectory(Const.DIRECTORY);
@@ -33,10 +33,11 @@ namespace Guanwu.Notify.Widget.FileSystemMessenger
                     Filter = Const.FILTER
                 };
                 FileWatcher.OnFileCreated += OnFileCreated;
+                FileWatcher.OnException += (s, e) => Logger.LogError(e, e.ToString());
                 FileWatcher.Start();
             }
-            catch (Exception ex) {
-                Logger.LogError(ex, ex.ToString());
+            catch (Exception e) {
+                Logger.LogError(e, e.ToString());
             }
         }
 
@@ -58,7 +59,6 @@ namespace Guanwu.Notify.Widget.FileSystemMessenger
                     { WidgetConst.PMSG_JOBID, jobId },
                     { WidgetConst.PMSG_SOURCE, WidgetName },
                 };
-
                 Parallel.ForEach(OnMessageReceived.GetInvocationList(), t => {
                     ((PipelineMessageEventHandler)t).BeginInvoke(info.FileBytes, context, null, null);
                 });
@@ -67,6 +67,9 @@ namespace Guanwu.Notify.Widget.FileSystemMessenger
                 foreach (var ie in e.InnerExceptions)
                     Logger.LogError(ie, ie.ToString());
             }
+            catch (Exception e) {
+                Logger.LogError(e, e.ToString());
+            }
         }
 
         private void TryBackup(FileWatcherInfo info, string jobId)
@@ -74,12 +77,11 @@ namespace Guanwu.Notify.Widget.FileSystemMessenger
             try {
                 string backupDir = Path.Combine(Const.DIRECTORY, DateTime.Now.ToString(Const.BACKUP_PATTERN));
                 Directory.CreateDirectory(backupDir);
-
                 string backupPath = Path.Combine(backupDir, jobId + ".json");
                 File.Move(info.FullName, backupPath);
             }
-            catch (Exception ex) {
-                Logger.LogError(ex, ex.ToString());
+            catch (Exception e) {
+                Logger.LogError(e, e.ToString());
             }
         }
     }

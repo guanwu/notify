@@ -55,12 +55,10 @@ namespace Guanwu.Notify.Plugin.StatusTracking
             Directory.CreateDirectory(dir);
 
             string path = Path.Combine(dir, name);
-
-            while (File.Exists(path) && path.IsLocked()) {
+            while (File.Exists(path) && path.IsFileLocked()) {
                 Logger.LogWarning($"File({path}) is in use, wait 5 seconds and try again.");
                 SpinWait.SpinUntil(() => false, 5000);
             }
-
             File.WriteAllText(path, report.Report, new UTF8Encoding(false));
         }
     }

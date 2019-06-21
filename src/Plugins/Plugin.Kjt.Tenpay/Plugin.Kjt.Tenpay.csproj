@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Guanwu.Notify.Plugin.Kjt.Tenpay</RootNamespace>
     <AssemblyName>Plugin.Kjt.Tenpay</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,8 +32,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Guanwu.Toolkit, Version=1.2.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Guanwu.Toolkit.1.2.4\lib\netstandard2.0\Guanwu.Toolkit.dll</HintPath>
+    <Reference Include="Guanwu.Toolkit, Version=1.3.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\Guanwu.Toolkit.1.3.4\lib\netstandard2.0\Guanwu.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="Guanwu.Toolkit.Serialization, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\Guanwu.Toolkit.Serialization.1.0.1\lib\netstandard2.0\Guanwu.Toolkit.Serialization.dll</HintPath>

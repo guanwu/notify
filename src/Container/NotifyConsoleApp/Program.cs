@@ -74,7 +74,11 @@ namespace Guanwu.NotifyConsoleApp
                 AppDomain pluginDomain = CreatePluginDomain(token);
                 pluginDomain.SetData(WidgetConst.HANGFIRE, HANGFIRE);
                 pluginDomain.DoCallBack(new CrossAppDomainDelegate(PluginCallBackAsync));
-                return await Task.Run(() => token.Activate<IPlugin>(pluginDomain));
+                return await Task.Run(() => {
+                    var plugin = token.Activate<IPlugin>(pluginDomain);
+                    Logger.LogInformation(token.AddInFullName);
+                    return plugin;
+                });
             }
 
             return await Task.Run(() => {
